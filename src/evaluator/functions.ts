@@ -235,7 +235,41 @@ _global['round'] = async function round(args, scope, execute) {
   }
   return fromNumber(Number(num.toFixed(prec)))
 }
-_global['round'].arity = (count) => count >= 1 && count <= 2
+_global['round'].arity = (count) => count >= 1 && count <= 2;
+
+_global["ceil"] = async function ceil(args, scope, execute) {
+  const value = await execute(args[0], scope);
+
+  if (value.type !== "number") {
+      return NULL_VALUE;
+  }
+
+  const num = value.data;
+  let prec = 0;
+
+  if (args.length === 2) {
+      const precValue = await execute(args[1], scope);
+
+      if (precValue.type !== "number" || precValue.data < 0 || !Number.isInteger(precValue.data)) {
+          return NULL_VALUE;
+      }
+      prec = precValue.data;
+  }
+
+  if (prec === 0) {
+      if (num < 0) {
+          // JavaScript's ceil() function will always rounds towards positive infinity (-3.5 -> -3).
+          // The behavior we're interested in is to "round half away from zero".
+          return fromNumber(-Math.ceil(-num));
+      }
+
+      return fromNumber(Math.ceil(num));
+  }
+
+  return fromNumber(Number(num.toFixed(prec)));
+}
+
+_global["ceil"].arity = (count) => count >= 1 && count <= 2;
 
 // eslint-disable-next-line require-await
 // eslint-disable-next-line require-await
